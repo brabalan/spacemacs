@@ -1,27 +1,29 @@
 #+TITLE: Scala contribution layer for Spacemacs
+#+HTML_HEAD_EXTRA: <link rel="stylesheet" type="text/css" href="../../../css/readtheorg.css" />
 
 [[file:img/scala.png]] with [[file:img/ensime.png]]
 
-* Table of Contents                                                   :TOC@4:
- - [[#description][Description]]
- - [[#layer-installation][Layer Installation]]
- - [[#ensime][Ensime]]
-     - [[#installation][Installation]]
-     - [[#usage][Usage]]
- - [[#scalastyle][Scalastyle]]
- - [[#key-bindings][Key bindings]]
-     - [[#ensime-key-bindings][Ensime key bindings]]
-         - [[#search][Search]]
-         - [[#sbt][sbt]]
-         - [[#typecheck][Typecheck]]
-         - [[#debug][Debug]]
-         - [[#errors][Errors]]
-         - [[#goto][Goto]]
-         - [[#documentation-inspect][Documentation, Inspect]]
-         - [[#server][Server]]
-         - [[#refactoring][Refactoring]]
-         - [[#tests][Tests]]
-         - [[#repl][REPL]]
+* Table of Contents                                         :TOC_4_org:noexport:
+ - [[Description][Description]]
+ - [[Layer Installation][Layer Installation]]
+ - [[Ensime][Ensime]]
+   - [[Installation][Installation]]
+   - [[Usage][Usage]]
+ - [[Scalastyle][Scalastyle]]
+ - [[Automatically show the type of the symbol under the cursor][Automatically show the type of the symbol under the cursor]]
+ - [[Key bindings][Key bindings]]
+   - [[Ensime key bindings][Ensime key bindings]]
+     - [[Search][Search]]
+     - [[sbt][sbt]]
+     - [[Typecheck][Typecheck]]
+     - [[Debug][Debug]]
+     - [[Errors][Errors]]
+     - [[Goto][Goto]]
+     - [[Documentation, Inspect][Documentation, Inspect]]
+     - [[Server][Server]]
+     - [[Refactoring][Refactoring]]
+     - [[Tests][Tests]]
+     - [[REPL][REPL]]
 
 * Description
 
@@ -82,6 +84,17 @@ To use scalastyle,
    the jar.
    
 See the [[http://flycheck.readthedocs.org/en/latest/guide/languages.html#el.flycheck-checker.scala-scalastyle][flycheck documentation]] for up-to-date configuration instructions.
+
+* Automatically show the type of the symbol under the cursor
+
+To enable the feature =ensime-print-type-at-point= when cursor moves, set the variable =scala-enable-eldoc-mode= to =t=.
+
+#+BEGIN_SRC emacs-lisp
+  (setq-default dotspacemacs-configuration-layers '(
+    (scala :variables scala-enable-eldoc-mode t)))
+#+END_SRC
+
+Enabling this option can cause slow editor performance.
 
 * Key bindings
 

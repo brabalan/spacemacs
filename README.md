@@ -1,5 +1,5 @@
 <a name="top"></a>
-[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/syl20bnr/spacemacs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://travis-ci.org/syl20bnr/spacemacs.svg)](https://travis-ci.org/syl20bnr/spacemacs) [![Buy A Drink](https://img.shields.io/badge/Paypal-Buy%20a%20Drink-blue.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=ESFVNPKP4Y742) [![Recommend Spacemacs](https://img.shields.io/badge/Slant-Recommend-ff69b4.svg)](http://www.slant.co/topics/12/~what-are-the-best-programming-text-editors)[![Twitter][]](http://www.twitter.com/spacemacs)
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/syl20bnr/spacemacs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://travis-ci.org/syl20bnr/spacemacs.svg)](https://travis-ci.org/syl20bnr/spacemacs)   [![Made with Spacemacs](https://cdn.rawgit.com/syl20bnr/spacemacs/442d025779da2f62fc86c2082703697714db6514/assets/spacemacs-badge.svg)](http://github.com/syl20bnr/spacemacs)  [![Buy A Drink](https://img.shields.io/badge/Paypal-Buy%20a%20Drink-blue.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=ESFVNPKP4Y742) [![Recommend Spacemacs](https://img.shields.io/badge/Slant-Recommend-ff69b4.svg)](http://www.slant.co/topics/12/~what-are-the-best-programming-text-editors)[![Twitter][]](http://www.twitter.com/spacemacs)
 ***
 <p align="center"><img src="/doc/img/title2.png" alt="Spacemacs"/></p>
 <p align="center">
@@ -85,7 +85,7 @@ organised in configuration layers following a set of
 # Documentation
 
 A comprehensive documentation is available for each layer by pressing
-<kbd>SPC f e h</kbd>. 
+<kbd>SPC f e h</kbd>.
 
 To go to the general documentation [click here][DOCUMENTATION.org].
 
@@ -123,9 +123,15 @@ Both Emacs and XEmacs have graphical support.
 We recommend the homebrew [emacs-mac-port][] formula:
 
 ```sh
-$ brew tap railwaycat/emacsmacport
+$ brew tap railwaycat/homebrew-emacsmacport
 $ brew install emacs-mac --with-spacemacs-icon  # OR, brew cask install emacs-mac
+$ brew linkapps
 ```
+
+Please note: these homebrew commands will install Emacs, and link it to your
+`/Applications` directory. You still need to run the `git clone` mentioned at
+the start of this file. That will populate your `~/.emacs.d` directory, which
+is what transforms a regular Emacs into Spacemacs.
 
 It is also recommended to add the [osx layer][] to your [dotfile][]:
 
@@ -133,8 +139,10 @@ It is also recommended to add the [osx layer][] to your [dotfile][]:
 (setq-default dotspacemacs-configuration-layers '(osx))
 ```
 
-Note that the `emacs-mac-port` server behaves differently than the regular
-Emacs server.
+Note that the `emacs-mac-port` server behaves differently than the regular Emacs
+server which in particular **DOES NOT** allow multi-tty if you start GUI i.e.
+you can't connect to the Emacs GUI server with `emacsclient` but server-client
+works if you start from terminal(TTY-only).
 Details can be found on the emacs-mac-port [README][emacs-mac-port-server].
 
 ### Windows
@@ -168,13 +176,18 @@ For efficient searches we recommend to install `pt` ([the platinum searcher][]).
 
    ```sh
    cd ~
-   mv .emacs.d .emacs.bak
+   mv .emacs.d .emacs.d.bak
+   mv .emacs .emacs.bak
    ```
+
+   Don't forget to backup and *remove* `~/.emacs` file otherwise Spacemacs
+   **WILL NOT** load since that file prevents Emacs from loading the proper
+   initialization file.
 
 2. Clone the repository:
 
    ```sh
-   git clone --recursive https://github.com/syl20bnr/spacemacs ~/.emacs.d
+   git clone https://github.com/syl20bnr/spacemacs ~/.emacs.d
    ```
 
    `master` is the stable branch and it is _immutable_, **DO NOT** make any
@@ -266,7 +279,28 @@ bugs, helping the community on the [Gitter Chat][] or sending pull requests.
 If you want to show your support financially you can buy a drink to the
 maintainer by clicking on the [Paypal badge](#top).
 
-Thank you !
+If you used spacemacs in a project and you want to show that fact, you can use
+the spacemacs badge: [![Built with Spacemacs](https://cdn.rawgit.com/syl20bnr/spacemacs/442d025779da2f62fc86c2082703697714db6514/assets/spacemacs-badge.svg)](http://github.com/syl20bnr/spacemacs)
+
+- For Markdown:
+
+   ```
+   [![Built with Spacemacs](https://cdn.rawgit.com/syl20bnr/spacemacs/442d025779da2f62fc86c2082703697714db6514/assets/spacemacs-badge.svg)](http://github.com/syl20bnr/spacemacs)
+   ```
+
+- For HTML:
+
+   ```
+   <a href="https://github.com/syl20bnr/spacemacs"><img src="https://cdn.rawgit.com/syl20bnr/spacemacs/442d025779da2f62fc86c2082703697714db6514/assets/spacemacs-badge.svg" /></a>
+   ```
+
+- For Org-mode:
+
+   ```
+   [[https://github.com/syl20bnr/spacemacs][file:https://cdn.rawgit.com/syl20bnr/spacemacs/442d025779da2f62fc86c2082703697714db6514/assets/spacemacs-badge.svg]]
+   ```
+
+Thank you!
 
 [Twitter]: http://i.imgur.com/tXSoThF.png
 [CONTRIBUTE.org]: doc/CONTRIBUTE.org

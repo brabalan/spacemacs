@@ -13,6 +13,20 @@
 ;; Variables
 
 (spacemacs|defvar-company-backends enh-ruby-mode)
+(spacemacs|defvar-company-backends ruby-mode)
+
+(defvar ruby-enable-enh-ruby-mode nil
+  "If non-nil, use `enh-ruby-mode' package instead of the built-in Ruby Mode.")
 
 (defvar ruby-version-manager nil
-  "If non nil defines the Ruby version manager (i.e. rbenv, rvm)")
+  "If non nil, defines the Ruby version manager (i.e. rbenv, rvm)")
+
+(defvar ruby-use-ruby-test nil
+  "If non-nil, use `ruby-test-mode' package instead of `rspec-mode'.")
+
+(defvar ruby-test-runner 'ruby-test
+  "Test runner to use. Possible values are `ruby-test' or `rspec'.")
+
+;; Command prefixes
+
+(spacemacs/declare-prefix-for-mode 'ruby-mode "mt" "ruby/test")

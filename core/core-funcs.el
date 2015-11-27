@@ -10,6 +10,12 @@
 ;;
 ;;; License: GPLv3
 
+(defun spacemacs/load-or-install-protected-package (pkg &optional log file-to-load)
+  "Load PKG package, and protect it against being deleted as an orphan.
+See `spacemacs/load-or-install-package' for more information."
+  (push pkg configuration-layer--protected-packages)
+  (spacemacs/load-or-install-package pkg log file-to-load))
+
 (defun spacemacs/load-or-install-package (pkg &optional log file-to-load)
   "Load PKG package. PKG will be installed if it is not already installed.
 Whenever the initial require fails the absolute path to the package
@@ -122,12 +128,12 @@ and its values are removed."
 Supported properties:
 
 `:evil-leader STRING'
-    One or several key sequence strings to be set with `evil-leader/set-key'.
+    One or several key sequence strings to be set with `spacemacs/set-leader-keys .
 
 `:evil-leader-for-mode CONS CELL'
     One or several cons cells (MODE . KEY) where MODE is a major-mode symbol
     and KEY is a key sequence string to be set with
-    `evil-leader/set-key-for-mode'.
+    `spacemacs/set-leader-keys-for-major-mode'.
 
 `:global-key STRING'
     One or several key sequence strings to be set with `global-set-key'.
@@ -141,10 +147,10 @@ Supported properties:
         (def-key (spacemacs/mplist-get props :define-key)))
     `((unless (null ',evil-leader)
         (dolist (key ',evil-leader)
-          (evil-leader/set-key key ',func)))
+          (spacemacs/set-leader-keys key ',func)))
       (unless (null ',evil-leader-for-mode)
         (dolist (val ',evil-leader-for-mode)
-          (evil-leader/set-key-for-mode
+          (spacemacs/set-leader-keys-for-major-mode
             (car val) (cdr val) ',func)))
       (unless (null ',global-key)
         (dolist (key ',global-key)

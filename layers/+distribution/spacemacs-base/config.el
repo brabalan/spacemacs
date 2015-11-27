@@ -76,6 +76,10 @@
 (setq global-auto-revert-non-file-buffers t
       auto-revert-verbose nil)
 
+;; Make dired "guess" target directory for some operations, like copy to
+;; directory visited in other split buffer.
+(setq dired-dwim-target t)
+
 ;; Regexp for useful and useless buffers for smarter buffer switching
 (defvar spacemacs-useless-buffers-regexp '("*\.\+")
   "Regexp used to determine if a buffer is not useful.")
@@ -111,6 +115,9 @@ It runs `tabulated-list-revert-hook', then calls `tabulated-list-print'."
 
 ;; Keep focus while navigating help buffers
 (setq help-window-select 't)
+
+;; Scroll compilation to first error or end
+(setq compilation-scroll-output 'first-error)
 
 ;; ---------------------------------------------------------------------------
 ;; Edit
@@ -151,6 +158,11 @@ It runs `tabulated-list-revert-hook', then calls `tabulated-list-print'."
 (with-eval-after-load 'comint
   (define-key comint-mode-map (kbd "C-d") nil))
 
+;; whitespace-cleanup configuration
+(pcase dotspacemacs-whitespace-cleanup
+  (`all (add-hook 'before-save-hook 'whitespace-cleanup))
+  (`trailing (add-hook 'before-save-hook 'delete-trailing-whitespace)))
+
 ;; ---------------------------------------------------------------------------
 ;; UI
 ;; ---------------------------------------------------------------------------
@@ -162,6 +174,11 @@ It runs `tabulated-list-revert-hook', then calls `tabulated-list-print'."
               '((truncation . nil) (continuation . nil)))
 ;; Show column number in mode line
 (setq column-number-mode t)
+;; Activate linum-mode in all prog-mode and text-mode buffers if the setting is
+;; enabled.
+(when dotspacemacs-line-numbers
+  (add-hook 'prog-mode-hook 'linum-mode)
+  (add-hook 'text-mode-hook 'linum-mode))
 ;; line number
 (setq linum-format "%4d")
 ;; highlight current line
@@ -183,12 +200,16 @@ It runs `tabulated-list-revert-hook', then calls `tabulated-list-print'."
     (if dotspacemacs-maximized-at-startup
         (add-hook 'window-setup-hook 'toggle-frame-maximized))))
 
+;; Highlight keywords like TODO, FIXME, etc.
+(add-hook 'prog-mode-hook 'spacemacs/highlight-TODO-words)
+
 ;; ---------------------------------------------------------------------------
 ;; Session
 ;; ---------------------------------------------------------------------------
 
 ;; save custom variables in ~/.spacemacs
-(setq custom-file (dotspacemacs/location))
+(unless (bound-and-true-p custom-file)
+  (setq custom-file (dotspacemacs/location)))
 ;; scratch buffer empty
 (setq initial-scratch-message nil)
 ;; don't create backup~ files

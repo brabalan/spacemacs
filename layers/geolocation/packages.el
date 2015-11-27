@@ -15,6 +15,7 @@
       osx-location
       sunshine
       theme-changer
+      popwin
       ))
 
 (defun geolocation/init-osx-location ()
@@ -27,7 +28,7 @@
                 (lambda ()
                   (setq calendar-latitude osx-location-latitude
                         calendar-longitude osx-location-longitude)
-                  (unless calendar-location-name
+                  (unless (bound-and-true-p calendar-location-name)
                     (setq calendar-location-name
                           (format "%s, %s"
                                   osx-location-latitude
@@ -41,13 +42,13 @@
     :defer t
     :init
     (progn
-      (evil-leader/set-key
+      (spacemacs/set-leader-keys
         "aw" 'sunshine-forecast
         "aW" 'sunshine-quick-forecast)
 
-      (evilify sunshine-mode sunshine-mode-map
-               (kbd "q") 'quit-window
-               (kbd "i") 'sunshine-toggle-icons))
+      (evilified-state-evilify sunshine-mode sunshine-mode-map
+        (kbd "q") 'quit-window
+        (kbd "i") 'sunshine-toggle-icons))
     :config
     ;; just in case location was not set by user, or on OS X,
     ;; if wasn't set up automatically, will not work with Emac's
@@ -66,3 +67,8 @@
       (when (> (length dotspacemacs-themes) 1)
         (change-theme (nth 0 dotspacemacs-themes)
                       (nth 1 dotspacemacs-themes))))))
+
+(defun geolocation/post-init-popwin ()
+  ;; Pin the weather forecast to the bottom window
+  (push '("*Sunshine*" :dedicated t :position bottom)
+        popwin:special-display-config))

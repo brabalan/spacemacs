@@ -13,6 +13,7 @@
 (defconst emacs-start-time (current-time))
 
 (require 'subr-x nil 'noerror)
+(require 'core-dotspacemacs)
 (require 'core-emacs-backports)
 (require 'core-release-management)
 (require 'core-auto-completion)
@@ -22,7 +23,6 @@
 (require 'core-toggle)
 (require 'core-micro-state)
 (require 'core-use-package-ext)
-(require 'core-keybindings)
 
 (defgroup spacemacs nil
   "Spacemacs customizations."
@@ -74,14 +74,14 @@ initialization."
   ;; explicitly set the prefered coding systems to avoid annoying prompt
   ;; from emacs (especially on Microsoft Windows)
   (prefer-coding-system 'utf-8)
-  ;; dotfile init
-  (dotspacemacs/load-file)
-  ;; TODO remove evil-want-C-u-scroll and document it, we should not
-  ;; shadow the universal argument
+  ;; TODO move evil-want-C-u-scroll when evil is removed from the bootstrapped
+  ;; packages.
   (setq-default evil-want-C-u-scroll t)
+  (dotspacemacs/load-file)
   (dotspacemacs|call-func dotspacemacs/init "Calling dotfile init...")
   (dotspacemacs|call-func dotspacemacs/user-init "Calling dotfile user init...")
   ;; spacemacs init
+  (require 'core-configuration-layer)
   (switch-to-buffer (get-buffer-create spacemacs-buffer-name))
   (setq initial-buffer-choice (lambda () (get-buffer spacemacs-buffer-name)))
   (spacemacs-buffer/set-mode-line "")
@@ -92,10 +92,12 @@ initialization."
   ;; default theme
   (let ((default-theme (car dotspacemacs-themes)))
     (spacemacs/load-theme default-theme)
-    ;; used to prevent automatic deletion of used packages
-    (setq spacemacs-used-theme-packages
-          (delq nil (mapcar 'spacemacs//get-theme-package
-                            dotspacemacs-themes)))
+    ;; protect used themes from deletion as orphans
+    (setq configuration-layer--protected-packages
+          (append
+           (delq nil (mapcar 'spacemacs//get-theme-package
+                             dotspacemacs-themes))
+           configuration-layer--protected-packages))
     (setq-default spacemacs--cur-theme default-theme)
     (setq-default spacemacs--cycle-themes (cdr dotspacemacs-themes)))
   ;; removes the GUI elements
@@ -123,31 +125,31 @@ initialization."
   (spacemacs-buffer/insert-banner-and-buttons)
   ;; mandatory dependencies
   ;; dash is required to prevent a package.el bug with f on 24.3.1
-  (spacemacs/load-or-install-package 'dash t)
-  (spacemacs/load-or-install-package 's t)
+  (spacemacs/load-or-install-protected-package 'dash t)
+  (spacemacs/load-or-install-protected-package 's t)
   ;; bind-key is required by use-package
-  (spacemacs/load-or-install-package 'bind-key t)
-  (spacemacs/load-or-install-package 'use-package t)
+  (spacemacs/load-or-install-protected-package 'bind-key t)
+  (spacemacs/load-or-install-protected-package 'bind-map t)
+  (spacemacs/load-or-install-protected-package 'use-package t)
   (setq use-package-verbose init-file-debug)
   ;; package-build is required by quelpa
-  (spacemacs/load-or-install-package 'package-build t)
+  (spacemacs/load-or-install-protected-package 'package-build t)
   (setq quelpa-verbose init-file-debug
         quelpa-dir (concat spacemacs-cache-directory "quelpa/")
         quelpa-build-dir (expand-file-name "build" quelpa-dir)
         quelpa-persistent-cache-file (expand-file-name "cache" quelpa-dir)
         quelpa-update-melpa-p nil)
-  (spacemacs/load-or-install-package 'quelpa t)
+  (spacemacs/load-or-install-protected-package 'quelpa t)
   ;; inject use-package hooks for easy customization of
   ;; stock package configuration
   (setq use-package-inject-hooks t)
   ;; which-key
-  (spacemacs/load-or-install-package 'which-key t)
-  ;; evil and evil-leader must be installed at the beginning of the
+  (spacemacs/load-or-install-protected-package 'which-key t)
+  ;; evil must be installed at the beginning of the
   ;; boot sequence.
   ;; Use C-u as scroll-up (must be set before actually loading evil)
-  (spacemacs/load-or-install-package 'evil t)
-  (spacemacs/load-or-install-package 'evil-leader t)
-  (require 'core-evilified-state)
+  (spacemacs/load-or-install-protected-package 'evil t)
+  (require 'core-keybindings)
   ;; check for new version
   (if dotspacemacs-mode-line-unicode-symbols
       (setq-default spacemacs-version-check-lighter "[⇪]"))

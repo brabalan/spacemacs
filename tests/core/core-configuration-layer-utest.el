@@ -609,6 +609,22 @@
       (spacemacs-buffer/loading-animation nil ((:output nil))))
      (configuration-layer//configure-packages-2 `(,pkg)))))
 
+(ert-deftest test-configure-packages-2--protected-package-is-configured()
+  (let ((pkg (cfgl-package "pkg" :name 'pkg :owner 'layer1 :protected t))
+        (mocker-mock-default-record-cls 'mocker-stub-record))
+    (mocker-let
+     ((configuration-layer//configure-package (p) ((:occur 1)))
+      (spacemacs-buffer/loading-animation nil ((:output nil))))
+     (configuration-layer//configure-packages-2 `(,pkg)))))
+
+(ert-deftest test-configure-packages-2--protected-excluded-package-is-configured()
+  (let ((pkg (cfgl-package "pkg" :name 'pkg :owner 'layer1 :excluded t :protected t))
+        (mocker-mock-default-record-cls 'mocker-stub-record))
+    (mocker-let
+     ((configuration-layer//configure-package (p) ((:occur 1)))
+      (spacemacs-buffer/loading-animation nil ((:output nil))))
+     (configuration-layer//configure-packages-2 `(,pkg)))))
+
 (ert-deftest test-configure-packages-2--excluded-package-is-not-configured()
   (let ((pkg (cfgl-package "pkg" :name 'pkg :owner 'layer1 :excluded t))
         (mocker-mock-default-record-cls 'mocker-stub-record))
@@ -676,6 +692,34 @@
       (spacemacs-buffer/message (m) ((:output nil))))
      (configuration-layer//configure-packages-2 `(,pkg))
      (should (equal load-path old-load-path)))))
+
+(ert-deftest
+    test-configure-packages-2--local-package-w/-string-location-update-load-path()
+  (let ((pkg (cfgl-package "pkg"
+                           :name 'pkg
+                           :owner 'dotfile
+                           :location spacemacs-docs-directory))
+        (expected-load-path load-path)
+        (mocker-mock-default-record-cls 'mocker-stub-record))
+    (mocker-let
+     ((spacemacs-buffer/loading-animation nil ((:output nil))))
+     (configuration-layer//configure-packages-2 `(,pkg))
+     (push spacemacs-docs-directory expected-load-path)
+     (should (equal expected-load-path load-path)))))
+
+(ert-deftest
+    test-configure-packages-2--local-package-w/-bad-string-location-gives-warning()
+  (let ((pkg (cfgl-package "pkg"
+                           :name 'pkg
+                           :owner 'dotfile
+                           :location "/this/directory/does/not/exist/"))
+        (mocker-mock-default-record-cls 'mocker-stub-record))
+    (mocker-let
+     ((spacemacs-buffer/loading-animation nil ((:output nil)))
+      (spacemacs-buffer/warning
+       (msg &rest args)
+       ((:record-cls 'mocker-stub-record :output nil :occur 1))))
+     (configuration-layer//configure-packages-2 `(,pkg)))))
 
 ;; ---------------------------------------------------------------------------
 ;; configuration-layer//sort-packages

@@ -112,7 +112,7 @@
    an alias for it."
   :remap
   (progn
-    (evil-leader/set-key
+    (spacemacs/set-leader-keys
       "wc" 'evil-window-left
       "wt" 'evil-window-down
       "ws" 'evil-window-up
@@ -125,7 +125,7 @@
       ))
   :switch
   (progn
-    (evil-leader/set-key
+    (spacemacs/set-leader-keys
       "wh" nil
       "wj" nil
       "wk" 'split-window-below
@@ -134,19 +134,19 @@
       "wH" 'spacemacs/rotate-windows
       "wJ" nil
       "wK" 'split-window-below-and-focus
-      "wL" 'ace-delete-window 
+      "wL" 'ace-delete-window
       ))
   :additional
   (progn
-    (evil-leader/set-key
+    (spacemacs/set-leader-keys
       "wé" 'other-window
       "wq" 'delete-window
-      "é" (lookup-key evil-leader--default-map "w")
+      "é" (lookup-key spacemacs-default-map "w")
       ))
   :special
   (spacemacs|use-package-add-hook ace-window
     :post-init
-    (evil-leader/set-key
+    (spacemacs/set-leader-keys
       "wC" 'evil-window-move-far-left
       )))
 
@@ -199,7 +199,7 @@
                        magit-unpushed-section-map
                        magit-unstaged-section-map
                        magit-untracked-section-map))
-      (spacemacs|evilify-map map
+      (evilified-state-evilify-map map
         :mode magit-status-mode
         :bindings
         ;; Remap CRTS
@@ -214,19 +214,16 @@
         (kbd "l") 'magit-log-popup
         ;; Correct others
         (kbd "v") 'magit-revert-popup
-        (kbd "g") 'magit-refresh
-        ))
+        (kbd "g") 'magit-refresh))
     (dolist (map (list magit-popup-mode-map
                        magit-popup-help-mode-map
                        magit-popup-sequence-mode-map))
-      (spacemacs|evilify-map map
+      (evilified-state-evilify-map map
         :mode magit-commit-mode
         :bindings
         (kbd "c") 'magit-commit
         (kbd "s") 'magit-commit-squash
-        (kbd "S") 'magit-commit-instant-squash
-        ))
-    ))
+        (kbd "S") 'magit-commit-instant-squash))))
 
 
 (bepo|rebind "neotree"
@@ -286,23 +283,23 @@
                (kbd "M-S") 'org-shiftmetaup
                (kbd "M-R") 'org-shiftmetaright
                )))
-    (evil-leader/set-key-for-mode 'org-mode
-      "mC" 'org-shiftleft
-      "mT" 'org-shiftdown
-      "mS" 'org-shiftup
-      "ms" 'org-schedule
-      "mR" 'org-shiftright
-      "m C-S-c" 'org-shiftcontrolleft
-      "m C-S-t" 'org-shiftcontroldown
-      "m C-S-s" 'org-shiftcontrolup
-      "m C-S-r" 'org-shiftcontrolright
-      "mtC" 'org-table-move-column-left
-      "mtc" 'org-table-previous-field
-      "mtT" 'org-table-move-row-down
-      "mtt" 'org-table-next-row
-      "mtS" 'org-table-move-row-up
-      "mtR" 'org-table-move-column-right
-      "mtr" 'org-table-next-field
+    (spacemacs/set-leader-keys-for-major-mode 'org-mode
+      "C" 'org-shiftleft
+      "T" 'org-shiftdown
+      "S" 'org-shiftup
+      "s" 'org-schedule
+      "R" 'org-shiftright
+      "C-S-c" 'org-shiftcontrolleft
+      "C-S-t" 'org-shiftcontroldown
+      "C-S-s" 'org-shiftcontrolup
+      "C-S-r" 'org-shiftcontrolright
+      "tC" 'org-table-move-column-left
+      "tc" 'org-table-previous-field
+      "tT" 'org-table-move-row-down
+      "tt" 'org-table-next-row
+      "tS" 'org-table-move-row-up
+      "tR" 'org-table-move-column-right
+      "tr" 'org-table-next-field
       )
     (evil-define-key 'normal evil-org-mode-map
       "gt" 'org-forward-heading-same-level
@@ -324,30 +321,30 @@
                (kbd "M-K") nil ; TODO find it!
                (kbd "M-L") 'move-to-window-line-top-bottom
                )))
-    (evil-leader/set-key-for-mode 'org-mode
-      "mH" 'org-refile
-      "mJ" 'org-show-todo-tree
-      "mK" nil
-      "mKr" 'org-demote-subtree
-      "mKc" 'org-promote-subtree
-      "mKt" 'org-move-subtree-down
-      "mKs" 'org-move-subtree-up
-      "mL" 'evil-org-recompute-clocks
-      "m C-S-h" nil
-      "m C-S-j" nil
-      "m C-S-k" nil
-      "m C-S-l" nil
-      "mtH" nil
-      "mth" 'org-table-recalculate
-      "mtJ" nil
-      "mtj" nil
-      "mtK" nil
-      "mtk" 'org-table-sort-lines
-      "mtL" nil
-      "mtl" 'org-table-convert
-      "mtjf" 'org-table-toggle-formula-debugger
-      "mtjo" 'org-table-toggle-coordinate-overlays
-      "ms" 'org-schedule
+    (spacemacs/set-leader-keys-for-major-mode 'org-mode
+      "H" 'org-refile
+      "J" 'org-show-todo-tree
+      "K" nil
+      "Kr" 'org-demote-gubtree
+      "Kc" 'org-promote-subtree
+      "Kt" 'org-move-subtree-down
+      "Ks" 'org-move-subtree-up
+      "L" 'evil-org-recompute-clocks
+      "C-S-h" nil
+      "C-S-j" nil
+      "C-S-k" nil
+      "C-S-l" nil
+      "tH" nil
+      "th" 'org-table-recalculate
+      "tJ" nil
+      "tj" nil
+      "tK" nil
+      "tk" 'org-table-sort-lines
+      "tL" nil
+      "tl" 'org-table-convert
+      "tjf" 'org-table-toggle-formula-debugger
+      "tjo" 'org-table-toggle-coordinate-overlays
+      "s" 'org-schedule
       )
     (evil-define-key 'normal evil-org-mode-map
       "gj" nil
@@ -402,7 +399,7 @@
      because of the mnemonic with yasnippet."
   :remap
   (progn
-    (evil-leader/set-key
+    (spacemacs/set-leader-keys
       "jc" 'spacemacs/push-mark-and-goto-beginning-of-line
       "jt" 'sp-newline
       "js" 'spacemacs/evil-goto-next-line-and-indent
@@ -415,7 +412,7 @@
       ))
   :switch
   (progn
-    (evil-leader/set-key
+    (spacemacs/set-leader-keys
       "jh" nil
       "jj" nil
       "jk" nil
@@ -435,7 +432,7 @@
       ))
   :additional
   (progn
-    (evil-leader/set-key
+    (spacemacs/set-leader-keys
       "iy" 'spacemacs/helm-yas
       "iYc" 'aya-create
       "iYe" 'spacemacs/auto-yasnippet-expand
@@ -445,12 +442,12 @@
   (progn
     (spacemacs|use-package-add-hook helm-c-yasnippet
       :post-init
-      (evil-leader/set-key
+      (spacemacs/set-leader-keys
         "is" 'spacemacs/evil-insert-line-above
         ))
     (spacemacs|use-package-add-hook auto-yasnippet
       :post-init
-      (evil-leader/set-key
+      (spacemacs/set-leader-keys
         "iS" 'spacemacs/insert-line-above-no-indent
         ))
     (spacemacs/declare-prefix "iY" "auto-yasnippet")))

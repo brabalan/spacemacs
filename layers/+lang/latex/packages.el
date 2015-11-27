@@ -46,41 +46,46 @@
     :config
     (progn
       ;; Key bindings for plain TeX
-      (evil-leader/set-key-for-mode 'tex-mode
-        "m\\" 'TeX-insert-macro
-        "mb" 'latex/build
-        "mC" 'TeX-command-master
+      (spacemacs/set-leader-keys-for-major-mode 'tex-mode
+        "\\" 'TeX-insert-macro
+        "b" 'latex/build
+        "C" 'TeX-command-master
         ;; Find a way to rebind tex-fonts
-        "mf" 'TeX-font
-        "mv" 'TeX-view)
+        "f" 'TeX-font
+        "v" 'TeX-view)
 
       ;; Key bindings for LaTeX
-      (evil-leader/set-key-for-mode 'latex-mode
-        "m\\" 'TeX-insert-macro
-        "mb" 'latex/build
-        "mc" 'LaTeX-close-environment
-        "mC" 'TeX-command-master
-        "me" 'LaTeX-environment
+      (spacemacs/set-leader-keys-for-major-mode 'latex-mode
+        "\\" 'TeX-insert-macro
+        "b" 'latex/build
+        "c" 'LaTeX-close-environment
+        "C" 'TeX-command-master
+        "e" 'LaTeX-environment
         ;; Find a way to rebind tex-fonts
-        "mf" 'TeX-font
-        "mhd" 'TeX-doc
-        "mi" 'LaTeX-insert-item
+        "f" 'TeX-font
+        "hd" 'TeX-doc
+        "i" 'LaTeX-insert-item
         ;; TeX-doc is a very slow function
-        "mpb" 'preview-buffer
-        "mpc" 'preview-clearout
-        "mpd" 'preview-document
-        "mpe" 'preview-environment
-        "mpf" 'preview-cache-preamble
-        "mpp" 'preview-at-point
-        "mpr" 'preview-region
-        "mps" 'preview-section
-        "mv" 'TeX-view))))
+        "pb" 'preview-buffer
+        "pc" 'preview-clearout
+        "pd" 'preview-document
+        "pe" 'preview-environment
+        "pf" 'preview-cache-preamble
+        "pp" 'preview-at-point
+        "pr" 'preview-region
+        "ps" 'preview-section
+        "v" 'TeX-view))))
 
 (when (string= latex-build-command "LatexMk")
-(defun latex/init-auctex-latexmk ()
-  (use-package auctex-latexmk
-    :defer t
-    :init (add-hook 'LaTeX-mode-hook 'auctex-latexmk-setup))))
+  (defun latex/init-auctex-latexmk ()
+    (use-package auctex-latexmk
+      :defer t
+      :init
+      (progn
+        (setq auctex-latexmk-inherit-TeX-PDF-mode t)
+        (spacemacs|use-package-add-hook tex
+          :post-config
+          (auctex-latexmk-setup))))))
 
 (when (configuration-layer/layer-usedp 'auto-completion)
   (defun latex/post-init-company ()
@@ -105,7 +110,7 @@
   (spacemacs/add-flycheck-hook 'LaTeX-mode))
 
 (defun latex/post-init-flyspell ()
-  (add-hook 'LaTeX-mode-hook 'flyspell-mode))
+  (spell-checking/add-flyspell-hook 'LaTeX-mode))
 
 (defun latex/post-init-smartparens ()
   (add-hook 'LaTeX-mode-hook 'smartparens-mode))

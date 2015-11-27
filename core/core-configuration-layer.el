@@ -24,9 +24,22 @@
 (require 'core-spacemacs-buffer)
 
 (unless package--initialized
-  (setq package-archives '(("melpa" . "http://melpa.org/packages/")
-                           ("org" . "http://orgmode.org/elpa/")
-                           ("gnu" . "http://elpa.gnu.org/packages/")))
+  (let ((archives '(("melpa" . "melpa.org/packages/")
+                    ("org"   . "orgmode.org/elpa/")
+                    ("gnu"   . "elpa.gnu.org/packages/"))))
+    (setq package-archives
+          (mapcar (lambda (x)
+                    (cons (car x) (concat
+                                   (if (and dotspacemacs-elpa-https
+                                            ;; for now org ELPA repository does
+                                            ;; not support HTTPS
+                                            ;; TODO when org ELPA repo support
+                                            ;; HTTPS remove the check
+                                            ;; `(not (equal "org" (car x)))'
+                                            (not (equal "org" (car x))))
+                                       "https://"
+                                     "http://") (cdr x))))
+                  archives)))
   ;; optimization, no need to activate all the packages so early
   (setq package-enable-at-startup nil)
   (package-initialize 'noactivate)
@@ -103,13 +116,19 @@
    (location :initarg :location
              :initform elpa
              :type (satisfies (lambda (x)
-                                (or (member x '(built-in local elpa))
+                                (or (stringp x)
+                                    (member x '(built-in local elpa))
                                     (and (listp x) (eq 'recipe (car x))))))
              :documentation "Location of the package.")
    (step :initarg :step
          :initform nil
          :type (satisfies (lambda (x) (member x '(nil pre))))
          :documentation "Initialization step.")
+   (protected :initarg :protected
+              :initform nil
+              :type boolean
+              :documentation
+              "If non-nil then this package cannot be excluded.")
    (excluded :initarg :excluded
              :initform nil
              :type boolean
@@ -127,6 +146,9 @@
 
 (defvar configuration-layer--skipped-packages nil
   "A list of all packages that were skipped during last update attempt.")
+
+(defvar configuration-layer--protected-packages nil
+  "A list of packages that will be protected from removal as orphans.")
 
 (defvar configuration-layer-error-count nil
   "Non nil indicates the number of errors occurred during the
@@ -193,8 +215,9 @@ layer directory."
                        "this layer already exists.") name))
      (t
       (make-directory layer-dir t)
-      (configuration-layer//copy-template name "extensions" layer-dir)
-      (configuration-layer//copy-template name "packages" layer-dir)
+      (configuration-layer//copy-template name "extensions.el" layer-dir)
+      (configuration-layer//copy-template name "packages.el" layer-dir)
+      (configuration-layer//copy-template name "README.org" layer-dir)
       (message "Configuration layer \"%s\" successfully created." name)))))
 
 (defun configuration-layer/make-layer (layer)
@@ -230,10 +253,17 @@ Properties that can be copied are `:location', `:step' and `:excluded'."
          (location (when (listp pkg) (plist-get (cdr pkg) :location)))
          (step (when (listp pkg) (plist-get (cdr pkg) :step)))
          (excluded (when (listp pkg) (plist-get (cdr pkg) :excluded)))
+         (protected (when (listp pkg) (plist-get (cdr pkg) :protected)))
+         (copyp (not (null obj)))
          (obj (if obj obj (cfgl-package name-str :name name-sym))))
     (when location (oset obj :location location))
     (when step (oset obj :step step))
     (oset obj :excluded excluded)
+    ;; cannot override protected packages
+    (unless copyp
+      (oset obj :protected protected)
+      (when protected
+        (push name-sym configuration-layer--protected-packages)))
     obj))
 
 (defun configuration-layer/get-packages (layers &optional dotfile)
@@ -365,6 +395,7 @@ Properties that can be copied are `:location', `:step' and `:excluded'."
   (configuration-layer/filter-objects
    packages (lambda (x) (and (not (null (oref x :owner)))
                              (not (memq (oref x :location) '(built-in local)))
+                             (not (stringp (oref x :location)))
                              (not (oref x :excluded))))))
 
 (defun configuration-layer//get-private-layer-dir (name)
@@ -378,9 +409,9 @@ If LAYER_DIR is nil, the private directory is used."
   (let ((src (concat configuration-layer-template-directory
                      (format "%s.template" template)))
         (dest (if layer-dir
-                  (concat layer-dir "/" (format "%s.el" template))
+                  (concat layer-dir "/" (format "%s" template))
                 (concat (configuration-layer//get-private-layer-dir name)
-                        (format "%s.el" template)))))
+                        (format "%s" template)))))
     (copy-file src dest)
     (find-file dest)
     (save-excursion
@@ -538,7 +569,7 @@ path."
 (defun configuration-layer/package-usedp (name)
   "Return non-nil if NAME is the name of a used package."
   (let ((obj (object-assoc name :name configuration-layer--packages)))
-    (when obj (oref obj :owner))))
+    (when (and obj (not (oref obj :excluded))) (oref obj :owner))))
 
 (defun configuration-layer//configure-layers (layers)
   "Configure LAYERS."
@@ -738,7 +769,8 @@ path."
     (spacemacs-buffer/loading-animation)
     (let ((pkg-name (oref pkg :name)))
       (cond
-       ((oref pkg :excluded)
+       ((and (oref pkg :excluded)
+             (not (oref pkg :protected)))
         (spacemacs-buffer/message
          (format "%S ignored since it has been excluded." pkg-name)))
        ((null (oref pkg :owner))
@@ -746,20 +778,26 @@ path."
          (format "%S ignored since it has no owner layer." pkg-name)))
        (t
         ;; load-path
-        (when (eq 'local (oref pkg :location))
-          (if (eq 'dotfile (oref pkg :owner))
-              ;; local packages owned by dotfile are stored in private/local
-              (push (file-name-as-directory
-                     (concat configuration-layer-private-directory
-                             "local/"
-                             (symbol-name (oref pkg :name))))
-                    load-path)
-            (let* ((owner (object-assoc (oref pkg :owner)
-                                        :name configuration-layer--layers))
+        (let ((location (oref pkg :location)))
+          (cond
+           ((stringp location)
+            (if (file-directory-p location)
+                (push (file-name-as-directory location) load-path)
+              (spacemacs-buffer/warning
+               "Location path for package %S does not exists (value: %s)."
+               pkg location)))
+           ((and (eq 'local location)
+                 (eq 'dotfile (oref pkg :owner)))
+            (push (file-name-as-directory
+                   (concat configuration-layer-private-directory "local/"
+                           (symbol-name (oref pkg :name))))
+                  load-path))
+           ((eq 'local location)
+            (let* ((owner (object-assoc (oref pkg :owner) :name configuration-layer--layers))
                    (dir (when owner (oref owner :dir))))
               (push (format "%slocal/%S/" dir pkg-name) load-path)
               ;; TODO remove extensions in 0.105.0
-              (push (format "%sextensions/%S/" dir pkg-name) load-path))))
+              (push (format "%sextensions/%S/" dir pkg-name) load-path)))))
         ;; configuration
         (cond
          ((eq 'dotfile (oref pkg :owner))
@@ -815,6 +853,22 @@ path."
                    pkg-name layer err))))))
           (oref pkg :post-layers))))
 
+(defun configuration-layer//cleanup-rollback-directory ()
+  "Clean up the rollback directory."
+  (let* ((dirattrs (delq nil
+                         (mapcar (lambda (d)
+                                   (unless (eq t d) d))
+                                 (directory-files-and-attributes
+                                  configuration-layer-rollback-directory
+                                  nil "\\`\\(\\.\\{0,2\\}[^.\n].*\\)\\'" t))))
+         (dirs (sort dirattrs
+                     (lambda (d e)
+                       (time-less-p (nth 6 d) (nth 6 e))))))
+    (dotimes (c (- (length dirs) dotspacemacs-max-rollback-slots))
+      (delete-directory (concat configuration-layer-rollback-directory
+                                "/" (car (pop dirs)))
+                        t t))))
+
 (defun configuration-layer/update-packages (&optional always-update)
   "Update packages.
 
@@ -822,7 +876,7 @@ If called with a prefix argument ALWAYS-UPDATE, assume yes to update."
   (interactive "P")
   (spacemacs-buffer/insert-page-break)
   (spacemacs-buffer/append
-   "\nUpdating Spacemacs... (for now only ELPA packages are updated)\n")
+   "\nUpdating Emacs packages from remote repositories (ELPA, MELPA, etc.)... \n")
   (spacemacs-buffer/append
    "--> fetching new package repository indexes...\n")
   (spacemacs//redisplay)
@@ -889,6 +943,7 @@ If called with a prefix argument ALWAYS-UPDATE, assume yes to update."
            (format "\n--> %s package(s) to be updated.\n" upgraded-count))
           (spacemacs-buffer/append
            "\nEmacs has to be restarted to actually install the new packages.\n")
+          (configuration-layer//cleanup-rollback-directory)
           (spacemacs//redisplay))
       (spacemacs-buffer/append "--> All packages are up to date.\n")
       (spacemacs//redisplay))))
@@ -1025,7 +1080,8 @@ to select one."
 
 (defun configuration-layer//is-package-orphan (pkg-name dist-pkgs dependencies)
   "Returns not nil if PKG-NAME is the name of an orphan package."
-  (unless (object-assoc pkg-name :name dist-pkgs)
+  (unless (or (object-assoc pkg-name :name dist-pkgs)
+              (memq pkg-name configuration-layer--protected-packages))
     (if (ht-contains? dependencies pkg-name)
         (let ((parents (ht-get dependencies pkg-name)))
           (reduce (lambda (x y) (and x y))
@@ -1115,24 +1171,16 @@ to select one."
    (t (let ((p (cadr (assq pkg-name package-alist))))
         (when p (package-delete p))))))
 
-(defun configuration-layer//filter-used-themes (orphans)
-  "Filter out used theme packages from ORPHANS candidates.
-Returns the filtered list."
-  (delq nil (mapcar (lambda (x)
-                      (and (not (memq x spacemacs-used-theme-packages))
-                           x)) orphans)))
-
 (defun configuration-layer/delete-orphan-packages (packages)
   "Delete PACKAGES if they are orphan."
   (interactive)
   (let* ((dependencies (configuration-layer//get-packages-dependencies))
          (implicit-packages (configuration-layer//get-implicit-packages
                              configuration-layer--used-distant-packages))
-         (orphans (configuration-layer//filter-used-themes
-                   (configuration-layer//get-orphan-packages
-                    configuration-layer--used-distant-packages
-                    implicit-packages
-                    dependencies)))
+         (orphans (configuration-layer//get-orphan-packages
+                   configuration-layer--used-distant-packages
+                   implicit-packages
+                   dependencies))
          (orphans-count (length orphans)))
     ;; (message "dependencies: %s" dependencies)
     ;; (message "implicit: %s" implicit-packages)

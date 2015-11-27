@@ -68,7 +68,7 @@
             pyim-personal-file (concat spacemacs-cache-directory
                                        "pyim-personal.txt")
             default-input-method "chinese-pyim")
-      (evilify pyim-dicts-manager-mode pyim-dicts-manager-mode-map))))
+      (evilified-state-evilify pyim-dicts-manager-mode pyim-dicts-manager-mode-map))))
 
 (defun chinese/init-find-by-pinyin-dired ()
   (use-package find-by-pinyin-dired
@@ -79,6 +79,8 @@
     :defer t
     :init
     (progn
+      (if chinese-enable-avy-pinyin
+          (setq ace-pinyin-use-avy t))
       (ace-pinyin-global-mode t)
       (spacemacs|hide-lighter ace-pinyin-mode))))
 

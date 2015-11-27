@@ -19,9 +19,9 @@
   (use-package diff-mode
     :defer t
     :config
-    (evilify diff-mode diff-mode-map
-             "j" 'diff-hunk-next
-             "k" 'diff-hunk-prev)))
+    (evilified-state-evilify diff-mode diff-mode-map
+      "j" 'diff-hunk-next
+      "k" 'diff-hunk-prev)))
 
 (defun version-control/init-diff-hl ()
   (use-package diff-hl
@@ -32,8 +32,8 @@
       (unless (display-graphic-p)
         (setq diff-hl-side 'left)
         (diff-hl-margin-mode))
-      (evil-leader/set-key
-        "ghr" 'diff-hl-revert-hunk
-        "ghN" 'diff-hl-previous-hunk
-        "ghn" 'diff-hl-next-hunk
-        "ghg" 'diff-hl-diff-goto-hunk))))
+      (spacemacs/set-leader-keys
+        "gdg" 'diff-hl-diff-goto-hunk
+        "gdN" 'diff-hl-previous-hunk
+        "gdn" 'diff-hl-next-hunk
+        "gdr" 'diff-hl-revert-hunk))))

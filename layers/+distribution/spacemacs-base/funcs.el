@@ -111,7 +111,7 @@ the current state and point position."
   (let ((counter (or count 1)))
     (while (> counter 0)
       (join-line 1)
-      (sp-newline)
+      (newline-and-indent)
       (setq counter (1- counter)))))
 
 ;; from Prelude
@@ -313,17 +313,16 @@ argument takes the kindows rotate backwards."
 (defun spacemacs/sudo-edit (&optional arg)
   (interactive "p")
   (if (or arg (not buffer-file-name))
-      (find-file (concat "/sudo:root@localhost:" (ido-read-file-name "File: ")))
+      (find-file (concat "/sudo:root@localhost:" (read-file-name "File: ")))
     (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
 
 ;; found at http://emacswiki.org/emacs/KillingBuffers
 (defun spacemacs/kill-other-buffers ()
   "Kill all other buffers."
   (interactive)
-  (let (name (buffer-name))
-    (when (yes-or-no-p (format "Killing all buffers except \"%s\" ? " buffer-file-name))
-      (mapc 'kill-buffer (delq (current-buffer) (buffer-list)))
-      (message "Buffers deleted!"))))
+  (when (yes-or-no-p (format "Killing all buffers except \"%s\"? " (buffer-name)))
+    (mapc 'kill-buffer (delq (current-buffer) (buffer-list)))
+    (message "Buffers deleted!")))
 
 ;; from http://dfan.org/blog/2009/02/19/emacs-dedicated-windows/
 (defun spacemacs/toggle-current-window-dedication ()
@@ -385,7 +384,6 @@ argument takes the kindows rotate backwards."
 (defun spacemacs/layout-triple-columns ()
   " Set the layout to triple columns. "
   (interactive)
-  (golden-ratio-mode 0)
   (delete-other-windows)
   (dotimes (i 2) (split-window-right))
   (balance-windows))
@@ -393,7 +391,6 @@ argument takes the kindows rotate backwards."
 (defun spacemacs/layout-double-columns ()
   " Set the layout to double columns. "
   (interactive)
-  (golden-ratio-mode 1)
   (delete-other-windows)
   (split-window-right))
 
@@ -566,10 +563,10 @@ current window."
     (switch-to-buffer (other-buffer (current-buffer) t))))
 
 (defun spacemacs/highlight-TODO-words ()
-  "Highlight keywords for  "
+  "Highlight keywords in comments."
   (interactive)
   (font-lock-add-keywords
-   nil '(("\\<\\(\\(FIX\\(ME\\)?\\|TODO\\|OPTIMIZE\\|HACK\\|REFACTOR\\):\\)"
+   nil '(("\\<\\(\\(FIX\\(ME\\)?\\|TODO\\|OPTIMIZE\\|HACK\\|REFACTOR\\)\\>:?\\)"
           1 font-lock-warning-face t))))
 
 (defun current-line ()
@@ -709,7 +706,7 @@ the right."
   (if (buffer-file-name)
       (call-interactively 'evil-write)
     (call-interactively 'write-file)))
-
+(evil-declare-not-repeat 'spacemacs/write-file)
 
 (defun spacemacs/dos2unix ()
   "Converts the current buffer to UNIX file format."
@@ -856,16 +853,6 @@ Compare them on count first,and in case of tie sort them alphabetically."
         (message "No words.")))
     words))
 
-;; byte compile elisp files
-(defun byte-compile-current-buffer ()
-  "`byte-compile' current buffer if it's emacs-lisp-mode and compiled file exists."
-  (interactive)
-  (when (and (eq major-mode 'emacs-lisp-mode)
-             (file-exists-p (byte-compile-dest-file buffer-file-name)))
-    (byte-compile-file buffer-file-name)))
-
-(add-hook 'after-save-hook 'byte-compile-current-buffer)
-
 ;; indent on paste
 ;; from Prelude: https://github.com/bbatsov/prelude
 (defun spacemacs/yank-advised-indent-function (beg end)
@@ -910,3 +897,16 @@ is nonempty."
   "Switch to the `*scratch*' buffer. Create it first if needed."
   (interactive)
   (switch-to-buffer (get-buffer-create "*scratch*")))
+
+;; http://stackoverflow.com/questions/11847547/emacs-regexp-count-occurrences
+(defun how-many-str (regexp str)
+  (loop with start = 0
+        for count from 0
+        while (string-match regexp str start)
+        do (setq start (match-end 0))
+        finally return count))
+
+(defun spacemacs/close-compilation-window ()
+  "Close the window containing the '*compilation*' buffer."
+  (interactive)
+  (delete-windows-on "*compilation*"))

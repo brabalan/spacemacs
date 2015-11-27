@@ -152,7 +152,7 @@
         (spacemacs/load-yasnippet)
         (require 'helm-c-yasnippet)
         (call-interactively 'helm-yas-complete))
-      (evil-leader/set-key "is" 'spacemacs/helm-yas)
+      (spacemacs/set-leader-keys "is" 'spacemacs/helm-yas)
       (setq helm-c-yas-space-match-any-greedy t))))
 
 (defun auto-completion/init-helm-company ()
@@ -213,6 +213,10 @@
       (define-key yas-minor-mode-map
         (kbd "M-s-/") 'yas-next-field)
 
+      ;; on multiple keys, fall back to completing read
+      ;; typically this means helm
+      (setq yas-prompt-functions '(yas-completing-prompt))
+
       ;; add key into candidate list
       (setq helm-yas-display-key-on-candidate t)
       (setq spacemacs--auto-completion-dir
@@ -234,7 +238,7 @@
                     (append (list private-yas-dir)
                             (when (boundp 'yas-snippet-dirs)
                               yas-snippet-dirs)
-                            spacemacs-snippets-dir))
+                            (list spacemacs-snippets-dir)))
               (yas-load-directory spacemacs-snippets-dir t)
               (yas-load-directory private-yas-dir t)
               (setq yas-wrap-around-region t))))
@@ -278,16 +282,16 @@
     :defer t
     :init
     (progn
-      (setq aya-persist-snippets-dir (concat
-                                      configuration-layer-private-directory
-                                      "snippets/"))
+      (setq aya-persist-snippets-dir
+            (or auto-completion-private-snippets-directory
+                (concat configuration-layer-private-directory "snippets/")))
       (defun spacemacs/auto-yasnippet-expand ()
         "Call `yas-expand' and switch to `insert state'"
         (interactive)
         (call-interactively 'aya-expand)
         (evil-insert-state))
       (spacemacs/declare-prefix "iS" "auto-yasnippet")
-      (evil-leader/set-key
+      (spacemacs/set-leader-keys
         "iSc" 'aya-create
         "iSe" 'spacemacs/auto-yasnippet-expand
         "iSw" 'aya-persist-snippet))))

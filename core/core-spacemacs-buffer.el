@@ -128,26 +128,20 @@ buffer, right justified."
   (with-current-buffer (get-buffer-create "*spacemacs*")
     (save-excursion
       (let* ((maxcol spacemacs-buffer--banner-length)
-             (injected (if insert-distro
+             (lhs (format "(emacs-%s)" emacs-version))
+             (rhs (if insert-distro
                            (format "(%s-%s)"
                                    dotspacemacs-distribution
                                    spacemacs-version)
                          (format "(%s)" spacemacs-version)))
-             (pos (- maxcol (length injected)))
+             (len (- maxcol (length lhs)))
              (buffer-read-only nil))
-        ;; reset first line
-        (beginning-of-buffer)
-        (let ((buffer-read-only nil))
-          (end-of-line)
-          (kill-line (- maxcol)))
-        (beginning-of-buffer)
-        ;; fill the first line with spaces if required
-        (when (< (line-end-position) maxcol)
-          (end-of-line)
-          (insert-char ?\s (- maxcol (line-end-position))))
-        (goto-char pos)
-        (delete-char (length injected))
-        (insert injected)))))
+        (message "injecting")
+        (goto-char (point-min))
+        (delete-region (point) (progn (end-of-line) (point)))
+        (insert (format
+                 (format "%%s %%%ds" len)
+                 lhs rhs))))))
 
 (defun spacemacs-buffer//insert-note (file caption &optional additional-widgets)
   "Insert the release note just under the banner.
@@ -528,7 +522,7 @@ HPADDING is the horizontal spacing betwee the content line and the frame border.
               (cond
                ((eq el 'recents)
                 (recentf-mode)
-                (when (spacemacs-buffer//insert-file-list "Recent Files:" (recentf-elements 5))
+                (when (spacemacs-buffer//insert-file-list "Recent Files:" (recentf-elements dotspacemacs-startup-recent-list-size))
                   (spacemacs//insert--shortcut "r" "Recent Files:")
                   (insert list-separator)))
                ((eq el 'bookmarks)
